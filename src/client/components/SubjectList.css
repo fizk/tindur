@@ -1,0 +1,12 @@
+.subject-list {
+    flex-grow: 1;
+    overflow: scroll;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background-color: var(--color-primary-500);
+}
+
+.subject-list__item {
+    margin: var(--space-2);
+}
