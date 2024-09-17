@@ -4,6 +4,35 @@
     padding: var(--space-2);
     box-shadow: var(--box-shadow);
     cursor: grab;
+    border-inline-start-width: 6px;
+    border-inline-start-style: solid;
+    border-inline-start-color: var(--color-white);
+
+    &.subject-card--ens {
+        border-inline-start-color: var(--color-red-1);
+    }
+    &.subject-card--sam {
+        border-inline-start-color: var(--color-purple-1);
+    }
+    &.subject-card--sta {
+        border-inline-start-color: var(--color-cyan-1);
+    }
+    &.subject-card--isl {
+        border-inline-start-color: var(--color-green-2);
+    }
+    &.subject-card--dan {
+        border-inline-start-color: var(--color-orange-1);
+    }
+    &.subject-card--nat {
+        border-inline-start-color: var(--color-brown-1);
+    }
+    &.subject-card--stud {
+        border-inline-start-color: var(--color-gray-1);
+    }
+    &.subject-card--vel {
+        border-inline-start-color: var(--color-blue-1);
+    }
+        
 }
 .subject-card__aside {
     display: flex;
@@ -42,4 +71,17 @@
 }
 .subject-card__details {
     margin-block: var(--space-2);
+    /* summary {
+        cursor: zoom-in;
+    }
+    & summary::marker {
+        display: none;
+        content: " + ";
+    } */
+}
+.subject-card__details[open] {
+    /* & summary::marker {
+        display: none;
+        content: " - ";
+    } */
 }

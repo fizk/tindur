@@ -3,6 +3,7 @@ import apacheMD5 from '../helpers/apacheMD5';
 
 export default async function authorization (authorization: string | undefined): Promise<void> {
     return Promise.resolve();
+    // return Promise.reject();
     // if (authorization === undefined) {
     //     throw new Error('Authorization not provided');
     // }

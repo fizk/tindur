@@ -1,4 +1,5 @@
 import { createServer } from 'http';
+import EventEmitter from 'node:events';
 import { Database } from 'sqlite3';
 import { 
     SkeletonHandler, 
@@ -11,6 +12,7 @@ import {
     JpegHandler,
 } from './handlers/file';
 import {SubjectListHandler, SubjectItemHandler } from './handlers/subjects';
+import { ServerEventHandler } from './handlers/server-events';
 import type { IncomingMessage, ServerResponse } from 'http';
 
 type Handler = (request: IncomingMessage, response: ServerResponse) => void;
@@ -18,20 +20,31 @@ type Handler = (request: IncomingMessage, response: ServerResponse) => void;
 const PORT = 4040;
 const db = new Database('./database.db');
 
+interface Client {
+    id: string,
+    response: ServerResponse
+}
+
+let clients: Client[] = [];
+
+const eventEmitter = new EventEmitter();
+
+
+
 const router: [RegExp, Handler][] = [
-    [/^\/$/,                                                        SkeletonHandler],
-    [/\.ico$/,                                                      NotFoundHandler],
-    [/^\/tindur\/manifest.json$/,                                   ManifestHandler],
-    [/^\/tindur\/.*\.js(\?.*)*$/,                                   JsHandler],
-    [/^\/tindur\/.*\.css(\?.*)*$/,                                  CssHandler],
-    [/^\/tindur\/fonts\/.*\.otf(\?.*)*$/,                           FontOtfHandler],
-    [/^\/tindur\/fonts\/.*\.woff(\?.*)*$/,                          FontWoffHandler],
-    [/^\/tindur\/images\/.*\.jpg(\?.*)*$/,                          JpegHandler],
+    [/^\/$/,                                      SkeletonHandler],
+    [/\.ico$/,                                    NotFoundHandler],
+    [/^\/tindur\/manifest.json$/,                 ManifestHandler],
+    [/^\/tindur\/.*\.js(\?.*)*$/,                 JsHandler],
+    [/^\/tindur\/.*\.css(\?.*)*$/,                CssHandler],
+    [/^\/tindur\/fonts\/.*\.otf(\?.*)*$/,         FontOtfHandler],
+    [/^\/tindur\/fonts\/.*\.woff(\?.*)*$/,        FontWoffHandler],
+    [/^\/tindur\/images\/.*\.jpg(\?.*)*$/,        JpegHandler],
 
-    [/^\/tindur\/api\/subjects(\?.*)?$/,                            SubjectListHandler(db)],
-    [/^\/tindur\/api\/subjects\/[0-9]+$/,                           SubjectItemHandler(db)],
+    [/^\/tindur\/api\/subjects(\?.*)?$/,          SubjectListHandler(db, eventEmitter)],
+    [/^\/tindur\/api\/subjects\/[0-9]+$/,         SubjectItemHandler(db, eventEmitter)],
 
-    
+    [/^\/tindur\/api\/register$/,                 ServerEventHandler(eventEmitter)],
 ]
 
 const server = createServer(async (request, response) => {

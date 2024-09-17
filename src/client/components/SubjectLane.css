@@ -1,0 +1,22 @@
+.subject-lane {
+    display: flex;
+    flex-direction: column;
+    overflow: scroll;
+}
+.subject-lane__header {
+    padding-block: var(--space-2);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    gap: var(--space-1);
+    align-items: center;
+}
+.subject-lane__title {
+    margin: 0;
+}
+.subject-lane__footer {
+    padding-block: var(--space-2);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}

@@ -1,0 +1,7 @@
+
+.subject-dashboard__content {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    overflow: scroll;
+    gap: var(--space-2);
+}

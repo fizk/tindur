@@ -94,4 +94,4 @@ jobs:
                         cd /var/www/tindur; \
                         npm install --omit=dev; \
                         node ./server/database.js; \
-                        ./node_modules/.bin/pm2 restart app;
+                        ./node_modules/.bin/pm2 restart tindur;

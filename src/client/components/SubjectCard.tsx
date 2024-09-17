@@ -1,8 +1,8 @@
 import React, { ChangeEvent, DragEvent, KeyboardEvent, useState } from "react";
-import type { Subject, SubjectGroup } from '../index.d';
 import classVariant from '../helpers/classVariant';
 import { SubjectTypes } from '../SubjectTypes';
 import Markdown from "react-markdown";
+import type { Subject } from '../index.d';
 import './SubjectCard.css'
 
 interface Props {
@@ -121,7 +121,7 @@ export default function SubjectCard ({subject, expanded = true, onUpdate, onDrag
 
     return (
         <>
-        <div className="subject-card" draggable={true} onDragStart={handleDragStart}>
+        <div className={classVariant('subject-card', [subject.subject?.toLowerCase() || ''])} draggable={true} onDragStart={handleDragStart}>
             <header>
                 {nameActive && (
                     <div>
@@ -141,7 +141,7 @@ export default function SubjectCard ({subject, expanded = true, onUpdate, onDrag
             </header>
             <aside className="subject-card__aside">
                 {kindActive && (
-                    <select onChange={handlKindChange} value={kind!}>
+                    <select onChange={handlKindChange} value={kind || ''}>
                         <option value={''}>Veldu fag</option>
                         {Object.entries(SubjectTypes).map(([key, value]) => (
                             <option key={key} value={key}>{value}</option>
@@ -166,7 +166,7 @@ export default function SubjectCard ({subject, expanded = true, onUpdate, onDrag
                 {!dateActive && (
                     <time className="subject-card__time" 
                         onDoubleClick={() => setDateActive(true)}>
-                            {date && Intl.DateTimeFormat('en-GB').format(new Date(date))}
+                            {date && Intl.DateTimeFormat('en-GB', {month:'short', weekday: 'short', day: 'numeric'}).format(new Date(date))}
                     </time>
                 )}
             </aside>
