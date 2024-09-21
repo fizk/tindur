@@ -239,4 +239,5 @@ apache.dockerfile
 docker-compose.yml
 httpd.conf
 database.db
+test.db
 .htpasswd

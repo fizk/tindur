@@ -107,6 +107,7 @@
   },
   "exclude": [
     "./src/client",
+    "./src/server/tests",
     "./node_modules",
     "./server"
   ]

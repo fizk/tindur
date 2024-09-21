@@ -17,18 +17,21 @@ export default function SubjectDashboard ({subjects, onUpdate, onCreate, onDrop}
     return (
         <section className="subject-dashboard__content">
             <SubjectLane subjects={subjects['0']} 
-                name="TODO" order={0} 
+                name={<>TODO <small>({subjects[0].length})</small></>} 
+                order={0} 
                 onUpdate={onUpdate} 
                 onCreate={() => onCreate(0)} 
                 onDrop={onDrop} />
             <SubjectLane subjects={subjects['1']} 
-                name="DOING" order={1} 
+                name={<>DOING <small>({subjects[1].length})</small></>} 
+                order={1} 
                 onUpdate={onUpdate} 
                 onCreate={() => onCreate(2)} 
                 onDrop={onDrop} />
             <SubjectLane subjects={subjects['2']} 
                 expanded={false}
-                name="DONE" order={2} 
+                name={<>DONE <small>({subjects[2].length})</small></>} 
+                order={2} 
                 onUpdate={onUpdate} 
                 onCreate={() => onCreate(2)} 
                 onDrop={onDrop} />

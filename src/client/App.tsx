@@ -1,23 +1,53 @@
-import React, { useState } from 'react';
-import { QueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import SubjectDashboard from './components/SubjectDashboard';
 import { SubjectTypes } from './SubjectTypes';
 import useLocalStorage from './hooks/useLocalStorage';
+import getRandomInt from './helpers/getRandomInt';
 import type { ChangeEvent, DragEvent } from "react";
-import type { Subject, SubjectGroup } from './index.d';
+import type { Subject, SubjectGroup, MutationArgument } from './index.d';
 import './App.css';
+import Filter from './icons/Filter';
+import Connect from './icons/Connect';
+import Disconnect from './icons/Disconnect';
 
-function getRandomInt(min: number, max: number) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+declare global {
+    interface Window { eventSource: EventSource | undefined; }
 }
 
-interface MutationArgument {
-    item: Subject
-    form: FormData
+const resolveInPlace = (item: Subject) => (old: SubjectGroup) => ({
+    0: (old[0] || []).map<Subject>(i => i.id === item.id ? item : i),
+    1: (old[1] || []).map<Subject>(i => i.id === item.id ? item : i),
+    2: (old[2] || []).map<Subject>(i => i.id === item.id ? item : i),
+});
+
+const resolveMove = (item: Subject, status: string) => (old: SubjectGroup) => {
+    const reduced = {
+        0: (old[0] || []).reduce<Subject[]>((previous, current) => {
+            return (current.id === item.id) 
+                ? previous 
+                : [...previous, current];
+        }, []),
+        1: (old[1] || []).reduce<Subject[]>((previous, current) => {
+            return (current.id === item.id) 
+                ? previous 
+                : [...previous, current];
+        }, []),
+        2: (old[2] || []).reduce<Subject[]>((previous, current) => {
+            return (current.id === item.id) 
+                ? previous 
+                : [...previous, current];
+        }, []),
+    };
+
+    reduced[status] = [
+        item,
+        ...reduced[status],
+    ]
+
+    return reduced;
 }
+
 
 const initialData: SubjectGroup = {
     '0': [],
@@ -33,7 +63,9 @@ export default function App ({}) {
 
     const [storedSelectedKind, setStoredSelectedKind] = useLocalStorage('selectedKind', 'ALL')
     const [selectedKind, setSelectedKind] = useState<string>(storedSelectedKind);
+
     const [clientId, setClientId] = useState();
+    const [isConnected, setIsConnected] = useState(false);
 
     const { data: subjects } = useQuery({initialData: initialData, queryKey: ['subjects', selectedKind, selectedDate], queryFn: async (): Promise<SubjectGroup> => {
 
@@ -76,13 +108,20 @@ export default function App ({}) {
             });
 
             const previous = queryClient.getQueryData(['subjects', selectedKind, selectedDate]);
-            queryClient.setQueryData(['subjects', selectedKind, selectedDate], (old: SubjectGroup) => ({
-                0: (old[0] || []).map<Subject>(i => i.id === item.id ? item : i),
-                1: (old[1] || []).map<Subject>(i => i.id === item.id ? item : i),
-                2: (old[2] || []).map<Subject>(i => i.id === item.id ? item : i),
-            }));
+            queryClient.setQueryData(['subjects', selectedKind, selectedDate], resolveInPlace(item));
 
             return {previous, response};
+        }
+    });
+
+    const updateServerSendMutation = useMutation({
+        retry: false,
+        onError: console.log,
+        mutationFn: async ({ item }: MutationArgument): Promise<any>  => {
+            const previous = queryClient.getQueryData(['subjects', selectedKind, selectedDate]);
+            queryClient.setQueryData(['subjects', selectedKind, selectedDate], resolveInPlace(item));
+
+            return {previous};
         }
     });
 
@@ -104,35 +143,19 @@ export default function App ({}) {
             });
 
             const previous = queryClient.getQueryData(['subjects', selectedKind, selectedDate]);
-            queryClient.setQueryData(['subjects', selectedKind, selectedDate], (old: SubjectGroup) => {
-
-                const reduced = {
-                    0: (old[0] || []).reduce<Subject[]>((previous, current) => {
-                        return (current.id === item.id) 
-                            ? previous 
-                            : [...previous, current];
-                    }, []),
-                    1: (old[1] || []).reduce<Subject[]>((previous, current) => {
-                        return (current.id === item.id) 
-                            ? previous 
-                            : [...previous, current];
-                    }, []),
-                    2: (old[2] || []).reduce<Subject[]>((previous, current) => {
-                        return (current.id === item.id) 
-                            ? previous 
-                            : [...previous, current];
-                    }, []),
-                };
-
-                reduced[form.get('status') as string] = [
-                    item,
-                    ...reduced[form.get('status') as string],
-                ]
-
-                return reduced;
-            });
+            queryClient.setQueryData(['subjects', selectedKind, selectedDate], resolveMove(item, form?.get('status') as string))
 
             return {previous, response};
+        }
+    });
+    
+    const moveServerSendMutation = useMutation({
+        retry: false,
+        onError: console.log,
+        mutationFn: async ({ item }: MutationArgument): Promise<any>  => {
+            const previous = queryClient.getQueryData(['subjects', selectedKind, selectedDate]);
+            queryClient.setQueryData(['subjects', selectedKind, selectedDate], resolveMove(item, String(item.status)))
+            return {previous};
         }
     });
     
@@ -151,7 +174,7 @@ export default function App ({}) {
 
                     const newData = {
                         ...previousQueryData,
-                        [status]: previousQueryData[status].map(item => {
+                        [status]: previousQueryData[status].map((item: Subject) => {
                             return item.id === id ? {...item, id: payload.lastID} : item
                         })
                     }
@@ -190,6 +213,22 @@ export default function App ({}) {
             return {optimistic, previous, response};
         },
     });
+    
+    const createServerSendMutation = useMutation({
+        retry: false,
+        onError: console.log,
+        mutationFn: async ({ item }: MutationArgument): Promise<any>  => {
+
+            const status: string = String(item.status);
+            queryClient.setQueryData(['subjects', selectedKind, selectedDate], (old: SubjectGroup) => {
+                return {
+                    ...old,
+                    [status]: [item, ...old[status] || []]
+                }
+            });
+
+        },
+    });
 
     const handleKindChange = (event: ChangeEvent<HTMLSelectElement>) => {
         setSelectedKind(event.currentTarget.value);
@@ -213,7 +252,7 @@ export default function App ({}) {
     const handleUpdate = (subject: Subject) => {
         const formData = new FormData();
 
-        formData.append('id', subject.id!);
+        formData.append('id', String(subject.id!));
         formData.append('subject', subject.subject!);
         formData.append('name', subject.name!);
         formData.append('description', subject.description!);
@@ -227,13 +266,11 @@ export default function App ({}) {
     };
 
     const handleOnDrop = (lane: number, event: DragEvent<HTMLUListElement>) => {
-        // console.log(`drop lane: ${lane}`, event.dataTransfer.getData('text/plain'))
-
         const data: Subject = JSON.parse(event.dataTransfer.getData('text/plain'));
 
         const formData = new FormData();
 
-        formData.append('id', data.id!);
+        formData.append('id', String(data.id!));
         formData.append('status', String(lane));
 
         moveMutation.mutate({
@@ -246,47 +283,48 @@ export default function App ({}) {
         setSelectedDate(event.currentTarget.value);
         setStoredSelectedDate(event.currentTarget.value);
     }
-
-    // const eventSourceRef = useRef(new EventSource("/tindur/api/register"));
     
-    // useEffect(() => {
-    //     console.log(eventSource);
-    //     const initFunction = (event: MessageEvent) => { 
-    //         console.log(event.type, event.data); 
-    //         setClientId(event.data);
-    //     };
-    //     const updateFunction = (event: MessageEvent) => { console.log(event.type, event.data); };
-    //     const createFunction = (event: MessageEvent) => { console.log(event.type, event.data); };
-    //     const moveFunction = (event: MessageEvent) => { console.log(event.type, event.data); };
-    //     const deleteFunction = (event: MessageEvent) => { console.log(event.type, event.data); };
+    const initFunction = (event: MessageEvent) => { 
+        console.log(event.type, event.data); 
+        setClientId(event.data);
+    };
 
-    //     eventSource.addEventListener('init', initFunction);
-    //     eventSource.addEventListener('update', updateFunction);
-    //     eventSource.addEventListener('create', createFunction);
-    //     eventSource.addEventListener('move', moveFunction);
-    //     eventSource.addEventListener('error', () => {
-    //         eventSource.close();
-    //     });
+    const updateFunction = (event: MessageEvent) => { 
+        console.log(event.type, event.data); 
+        updateServerSendMutation.mutate({item: JSON.parse(event.data)})
+    };
 
-    //     return () => {
-    //         eventSource.removeEventListener('init', initFunction);
-    //         eventSource.removeEventListener('update', updateFunction);
-    //         eventSource.removeEventListener('create', createFunction);
-    //         eventSource.removeEventListener('move', moveFunction);
-    //     }
-    // }, []);
+    const createFunction = (event: MessageEvent) => { 
+        console.log(event.type, event.data); 
+        createServerSendMutation.mutate({item: JSON.parse(event.data)});
+    };
+
+    const moveFunction = (event: MessageEvent) => { 
+        console.log(event.type, event.data); 
+        moveServerSendMutation.mutate({item: JSON.parse(event.data)})
+    };
+
+    const deleteFunction = (event: MessageEvent) => { 
+        console.log(event.type, event.data); 
+    };
+
+    useEffect(() => {
+        if (!window.eventSource) {
+            window.eventSource = new EventSource("/tindur/api/register");
+            window.eventSource.addEventListener('open', () => setIsConnected(true));
+            window.eventSource.addEventListener('error', event => setIsConnected(false));
+            window.eventSource.addEventListener('init', initFunction);
+            window.eventSource.addEventListener('update', updateFunction);
+            window.eventSource.addEventListener('create', createFunction);
+            window.eventSource.addEventListener('move', moveFunction);
+        }
+    }, []);
 
     return (
         <div className="app">
             <nav className="app__navigation"></nav>
             <header className="app__header">
-                <svg width="800px" height="800px" viewBox="0 0 971.986 971.986" className="app__icon">
-                    <g>
-                        <path d="M370.216,459.3c10.2,11.1,15.8,25.6,15.8,40.6v442c0,26.601,32.1,40.101,51.1,21.4l123.3-141.3
-                            c16.5-19.8,25.6-29.601,25.6-49.2V500c0-15,5.7-29.5,15.8-40.601L955.615,75.5c26.5-28.8,6.101-75.5-33.1-75.5h-873
-                            c-39.2,0-59.7,46.6-33.1,75.5L370.216,459.3z" className="app__icon-path"/>
-                    </g>
-                </svg>
+                <Filter />
                 <select onChange={handleKindChange} value={selectedKind}>
                     <>
                     <option value="ALL">Allt</option>
@@ -296,8 +334,9 @@ export default function App ({}) {
                     </>
                 </select>
                 <input type="date" value={selectedDate} onChange={handleDateChange} />
+                {isConnected && <Connect />}
+                {!isConnected && <Disconnect />}
             </header>
-            {clientId}
             <SubjectDashboard subjects={subjects} 
                 onCreate={handleCreate} 
                 onDrop={handleOnDrop} 

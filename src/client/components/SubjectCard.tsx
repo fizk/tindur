@@ -1,7 +1,8 @@
-import React, { ChangeEvent, DragEvent, KeyboardEvent, useState } from "react";
+import React, { useState, useEffect } from "react";
 import classVariant from '../helpers/classVariant';
 import { SubjectTypes } from '../SubjectTypes';
 import Markdown from "react-markdown";
+import type { ChangeEvent, DragEvent, KeyboardEvent  } from "react";
 import type { Subject } from '../index.d';
 import './SubjectCard.css'
 
@@ -107,7 +108,6 @@ export default function SubjectCard ({subject, expanded = true, onUpdate, onDrag
             date: date
         });
     };
-
     const handleDragStart = (event: DragEvent<HTMLDivElement>) => {
         event.dataTransfer.setData('text/plain', JSON.stringify({
             ...subject,
@@ -118,6 +118,13 @@ export default function SubjectCard ({subject, expanded = true, onUpdate, onDrag
         }));
         onDragStart(event);
     }
+
+    useEffect(() => {
+        setName(subject.name)
+        setKind(subject.subject)
+        setDate(subject.date)
+        setDescription(subject.description)
+    }, [subject]);
 
     return (
         <>
@@ -135,7 +142,7 @@ export default function SubjectCard ({subject, expanded = true, onUpdate, onDrag
                 {!nameActive && (
                     <h3 className={classVariant('subject-card__title', name ? [] : ['disabled'])} 
                         onDoubleClick={() => setNameActive(true)}>
-                            {name || 'Missing title'}
+                            {name || 'Vantar titil'}
                     </h3>
                 )}
             </header>
@@ -181,7 +188,7 @@ export default function SubjectCard ({subject, expanded = true, onUpdate, onDrag
                 <>
                 {expanded === false && (
                     <details className="subject-card__details">
-                        <summary>Meira</summary>
+                        <summary>meira</summary>
                         <Markdown>{description || 'Vantar lýsingu'}</Markdown>
                     </details>
                 )}

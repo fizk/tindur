@@ -9,7 +9,7 @@ import {
     ManifestHandler,
     FontOtfHandler,
     FontWoffHandler,
-    JpegHandler,
+    RastarImageHandler,
 } from './handlers/file';
 import {SubjectListHandler, SubjectItemHandler } from './handlers/subjects';
 import { ServerEventHandler } from './handlers/server-events';
@@ -29,8 +29,6 @@ let clients: Client[] = [];
 
 const eventEmitter = new EventEmitter();
 
-
-
 const router: [RegExp, Handler][] = [
     [/^\/$/,                                      SkeletonHandler],
     [/\.ico$/,                                    NotFoundHandler],
@@ -39,7 +37,7 @@ const router: [RegExp, Handler][] = [
     [/^\/tindur\/.*\.css(\?.*)*$/,                CssHandler],
     [/^\/tindur\/fonts\/.*\.otf(\?.*)*$/,         FontOtfHandler],
     [/^\/tindur\/fonts\/.*\.woff(\?.*)*$/,        FontWoffHandler],
-    [/^\/tindur\/images\/.*\.jpg(\?.*)*$/,        JpegHandler],
+    [/^\/tindur\/(icons|images)\/.*\.(png|jpg)(\?.*)*$/,   RastarImageHandler],
 
     [/^\/tindur\/api\/subjects(\?.*)?$/,          SubjectListHandler(db, eventEmitter)],
     [/^\/tindur\/api\/subjects\/[0-9]+$/,         SubjectItemHandler(db, eventEmitter)],

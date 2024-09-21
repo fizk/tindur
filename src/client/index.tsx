@@ -12,6 +12,12 @@ import './fonts/futura/Futura-Light.woff';
 import './fonts/futura/Futura-Medium-Italic.woff';
 import './fonts/futura/Futura-Medium.woff';
 import './images/tinds.jpg';
+import './images/screenshot1.png';
+import './images/screenshot2.png';
+import './icons/512.png';
+import './icons/192.png';
+import './icons/32x32.png';
+import './icons/16x16.png';
 
 const queryClient = new QueryClient();
 

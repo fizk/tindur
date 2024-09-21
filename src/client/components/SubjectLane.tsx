@@ -1,11 +1,12 @@
-import React, { DragEvent } from "react";
+import React from "react";
+import type { DragEvent, ReactNode } from "react";
 import SubjectList from "./SubjectList";
 import { Subject } from "..//index.d";
 import './SubjectLane.css';
 
 interface Props {
     subjects: Subject[]
-    name: string
+    name: ReactNode
     order: number
     expanded?: boolean
     onUpdate: (subject: Subject) => void

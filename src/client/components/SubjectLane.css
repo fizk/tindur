@@ -13,6 +13,9 @@
 }
 .subject-lane__title {
     margin: 0;
+    display: flex;
+    gap: var(--space-0);
+    align-items: center;
 }
 .subject-lane__footer {
     padding-block: var(--space-2);

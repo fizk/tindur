@@ -35,7 +35,7 @@ module.exports = {
                 use: [MiniCssExtractPlugin.loader, "css-loader"],
             },
             {
-                test: /\.png$/i,
+                test: /images\/.*\.(png|jpg)$/i,
                 type: 'asset/resource',
                 generator: {
                 // keep original filenames
@@ -43,11 +43,11 @@ module.exports = {
                 },
             },
             {
-                test: /\.jpg$/i,
+                test: /icons\/.*\.(png|jpg)$/i,
                 type: 'asset/resource',
                 generator: {
                 // keep original filenames
-                    filename: 'images/[name][ext]', 
+                    filename: 'icons/[name][ext]', 
                 },
             },
             {

@@ -1,0 +1,10 @@
+.icon {
+    width: var(--font-1);
+    height: auto;
+}
+.icon-path__fill {
+    fill: currentColor;
+}
+.icon-path__stroke {
+    stroke: currentColor;
+}

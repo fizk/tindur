@@ -1,4 +1,5 @@
 import {IncomingMessage, ServerResponse} from 'http';
+import {extname} from 'path';
 import {readFile} from 'fs/promises';
 
 export const SkeletonHandler = async (request: IncomingMessage, response: ServerResponse) => {
@@ -59,8 +60,9 @@ export const CssHandler = async (request: IncomingMessage, response: ServerRespo
 
 export const ManifestHandler = async (request: IncomingMessage, response: ServerResponse) => {
     const manifest = {
-        name: 'Electronic Dashboard',
-        short_name: 'ED',
+        id: '/tindur',
+        name: "Tindur's Dashboard",
+        short_name: 'Tindur',
         orientation: 'portrait',
         display: 'standalone',          // fullscreen, standalone, minimal-ui, browser
         background_color: '#dde7ea',    // member defines a placeholder background color for 
@@ -82,7 +84,21 @@ export const ManifestHandler = async (request: IncomingMessage, response: Server
                 sizes: '192x193',
             },
         ],
-      };
+        screenshots: [
+            {
+                src: "/tindur/images/screenshot1.png",
+                type: "image/png",
+                sizes: "540x720",
+                form_factor: "narrow"
+            },
+            {
+                src: "/tindur/images/screenshot2.png",
+                type: "image/png",
+                sizes: "720x540",
+                form_factor: "wide"
+            }
+        ]
+    };
     const manifestDocument = JSON.stringify(manifest, undefined, 4);
     
     response.writeHead(200, {
@@ -109,14 +125,24 @@ export const IconRastarHandler = async (request: IncomingMessage, response: Serv
     }
 }
 
-export const JpegHandler = async (request: IncomingMessage, response: ServerResponse) => {
+export const RastarImageHandler = async (request: IncomingMessage, response: ServerResponse) => {
     const url = new URL(request.url!, 'http://any-host');
     const path = url.pathname?.split('/').filter(part => part !== '');
+    
+    const category = path.at(1);
+    const fileName = path.at(-1);
+    const ext = extname(path.at(-1) || '');
+
+    const map: Record<string, string> = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpg',
+    }
+
     try {
-        const file = await readFile(`./client/images/${path.pop()}`);
+        const file = await readFile(`./client/${category}/${fileName}`);
         response.writeHead(200, {
             'Content-Length': Buffer.byteLength(file),
-            'content-type': 'image/jpg'
+            'content-type': map[ext]
         }).end(file);
     } catch (error) {
         response.writeHead(404, {
@@ -125,6 +151,7 @@ export const JpegHandler = async (request: IncomingMessage, response: ServerResp
         }).end();
     }
 }
+
 export const IconVectorHandler = async (request: IncomingMessage, response: ServerResponse) => {
     const url = new URL(request.url!, 'http://any-host');
     const path = url.pathname?.split('/').filter(part => part !== '');
